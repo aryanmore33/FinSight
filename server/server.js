@@ -8,10 +8,10 @@ const morgan = require('morgan');
 const { Server } = require('socket.io');
 
 // Middleware
-// const { jwtAuthMiddleware } = require('./middlewares/jwtAuthMiddleware.js');
+const { jwtAuthMiddleware } = require('./middlewares/jwtAuthMiddleware');
 
 // Routes
-// const userRoutes = require('./routes/userRoutes.js');
+const userRoutes = require('./routes/userRoutes.js');
 
 
 // Error Handler
@@ -58,7 +58,7 @@ app.use(morgan('dev'));
 
 
 // ✅ Routes
-// app.use('/api/users', userRoutes);
+app.use('/api/users', userRoutes);
 
 
 
