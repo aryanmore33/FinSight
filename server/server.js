@@ -11,7 +11,9 @@ const { Server } = require('socket.io');
 const { jwtAuthMiddleware } = require('./middlewares/jwtAuthMiddleware');
 
 // Routes
-const userRoutes = require('./routes/userRoutes.js');
+const authRoutes = require('./routes/authRoutes');
+const dashboardRoute = require('./routes/dashboardRoute');
+const transactionRoutes = require('./routes/transactionRoutes');
 
 
 // Error Handler
@@ -58,7 +60,9 @@ app.use(morgan('dev'));
 
 
 // ✅ Routes
-app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api', dashboardRoute);
+app.use('/api/transactions', transactionRoutes);
 
 
 

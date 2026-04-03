@@ -6,6 +6,7 @@ const {
   sendOtp,
   verifyOtp,
   checkAuthenticated,
+  updateProfile,
   logout
 } = require("../controllers/userController");
 
@@ -33,6 +34,7 @@ router.post("/send-otp", sendOtp);
 router.post("/verify-otp", verifyOtp);
 
 router.get("/me", jwtAuthMiddleware, checkAuthenticated);
+router.patch("/update-profile", jwtAuthMiddleware, updateProfile);
 
 router.post("/logout", jwtAuthMiddleware, logout);
 

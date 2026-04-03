@@ -27,7 +27,7 @@ const jwtAuthMiddleware = (req, res, next) => {
 }
 
 const viewerOnly = (req, res, next) => {
-    if (req.user.role !== 'viewer') {
+    if (req.user.role !== 'viewer' && req.user.role !== "admin") {
     return res.status(403).json({
       error: "viewer access only"
     });
@@ -35,7 +35,7 @@ const viewerOnly = (req, res, next) => {
   next();
 }
 const analystOnly = (req, res, next) => {
-    if (req.user.role !== 'analyst') {
+    if (req.user.role !== 'analyst' && req.user.role !== "admin") {
     return res.status(403).json({
       error: "analyst access only"
     });

@@ -268,6 +268,24 @@ const checkAuthenticated = async (req, res) => {
   }
 };
 
+const updateProfile = async (req, res) => {
+  const { name, email, phone } = req.body;
+
+  try {
+    const updatedUser = await userModel.updateUserProfile(req.user.userId, {
+      name,
+      email,
+      phone,
+    });
+  }
+    catch (error) {
+      console.error(error);
+      return res.status(500).json({
+        error: "Profile update failed",
+      });
+    }
+}
+
 
 
 // ================= LOGOUT =================
@@ -288,4 +306,5 @@ module.exports = {
   verifyOtp,
   checkAuthenticated,
   logout,
+  updateProfile,
 };

@@ -135,8 +135,24 @@ const findUserById = async (id) => {
   return result.rows[0];
 };
 
+const updateUserProfile = async (id, name, email, phone) => {
+  try {
+    const query = `
+      UPDATE users
+      SET name = $1, email = $2, phone = $3
+      WHERE id = $4
+      RETURNING id, name, email, role, phone;
+      `;
+      const result = await pool.query(query, [name, email, phone, id]);
+      return result.rows[0];
+  }
+  catch (err) {
+    console.error("Error updating user profile:", err);
+    throw err;
+  }
 
 
+}
 // ================= FIND USER BY EMAIL =================
 const findUserByEmail = async (email) => {
   const query = `SELECT * FROM users WHERE email = $1`;
@@ -166,4 +182,5 @@ module.exports = {
   findUserById,
   findUserByEmail,
   findUserByPhone,
+  updateUserProfile,
 };
