@@ -511,6 +511,67 @@ const sendEmail = async (email, otp) => {
   }
 };
 
+/**
+ * Send Admin Approval Notification
+ * @param {string} adminEmail - Existing admin's email
+ * @param {object} requester - New admin requester details
+ */
+const sendAdminApprovalNotification = async (adminEmail, requester) => {
+  const html = `
+    <div style="font-family: Arial; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+      <div style="background-color: #f4b400; padding: 20px; text-align: center;">
+        <h2 style="color: #ffffff; margin: 0;">🛡️ New Admin Registration Request</h2>
+      </div>
+
+      <div style="padding: 20px; color: #333;">
+        <p style="font-size: 16px;">Hello Admin,</p>
+        <p style="font-size: 14px;">A new user has requested <strong>Administrator</strong> access to FinSight. Please review the details below and approve or reject the request from your dashboard.</p>
+        
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 4px; margin: 20px 0;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 8px 0; color: #666; font-weight: bold;">Name:</td>
+              <td style="padding: 8px 0; color: #333;">${requester.name}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #666; font-weight: bold;">Email:</td>
+              <td style="padding: 8px 0; color: #333;">${requester.email}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #666; font-weight: bold;">Phone:</td>
+              <td style="padding: 8px 0; color: #333;">${requester.phone}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #666; font-weight: bold;">Requested At:</td>
+              <td style="padding: 8px 0; color: #333;">${new Date().toLocaleString()}</td>
+            </tr>
+          </table>
+        </div>
+
+        <p style="color: #666; font-size: 12px; font-style: italic;">Note: This user will not be able to log in until they are approved by an existing administrator.</p>
+      </div>
+
+      <div style="background-color: #f1f3f4; padding: 15px; text-align: center; border-top: 1px solid #e0e0e0;">
+        <p style="color: #999; font-size: 12px; margin: 0;">© 2024 FinSight. Security & Administration.</p>
+      </div>
+    </div>
+  `;
+
+  try {
+    await transporter.sendMail({
+      from: `FinSight Account Security <${process.env.EMAIL_USER}>`,
+      to: adminEmail,
+      subject: "🛡️ Action Required: New Admin Registration Request",
+      html
+    });
+    console.log(`✅ Admin approval notification sent to ${adminEmail}`);
+    return { success: true };
+  } catch (error) {
+    console.error("❌ Admin notification failed:", error.message);
+    throw new Error("Admin notification service failed");
+  }
+};
+
 module.exports = {
   sendBudgetExceededAlert,
   sendBudgetWarningAlert,
@@ -518,4 +579,5 @@ module.exports = {
   sendUnusualSpendingAlert,
   sendHighTransactionAlert,
   sendEmail,
+  sendAdminApprovalNotification,
 };

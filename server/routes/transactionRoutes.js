@@ -17,7 +17,8 @@ const {
 const {
   jwtAuthMiddleware,
   analystOnly,
-  adminOnly
+  adminOnly,
+  viewerOnly
 } = require("../middlewares/jwtAuthMiddleware");
 
 const upload = require("../middlewares/uploadCsv");
@@ -26,11 +27,11 @@ const router = express.Router();
 
 router.use(jwtAuthMiddleware);
 
-router.get("/", analystOnly, getAllTransactions);
+router.get("/", analystOnly, viewerOnly, getAllTransactions);
 
 router.post("/addTransaction", adminOnly, addTransaction);
 
-router.get("/:transactionId", analystOnly, getTransaction);
+router.get("/:transactionId", viewerOnly, analystOnly, getTransaction);
 
 router.put("/:transactionId", adminOnly, editTransaction);
 
@@ -47,18 +48,19 @@ router.post("/bulk/create", adminOnly, bulkCreateTransactionsJson);
 
 // analytics routes
 
-router.get("/analytics/statistics", analystOnly, getStatistics);
+router.get("/analytics/statistics", analystOnly,viewerOnly, getStatistics);
 
-router.get("/analytics/categories", analystOnly, getCategoryStats);
+router.get("/analytics/categories", analystOnly, viewerOnly, getCategoryStats);
 
-router.get("/analytics/monthly", analystOnly, getMonthlyStats);
+router.get("/analytics/monthly", analystOnly, viewerOnly, getMonthlyStats);
 
 router.get(
   "/analytics/top-categories",
   analystOnly,
+  viewerOnly,
   getTopSpendingCategories
 );
 
-router.get("/analytics/recent", analystOnly, getRecentActivity);
+router.get("/analytics/recent", analystOnly, viewerOnly, getRecentActivity);
 
 module.exports = router;

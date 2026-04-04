@@ -6,7 +6,7 @@ const jwtAuthMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
     // Check for token in Authorization header
     if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.split(7);
+        token = authHeader.split(' ')[1];
     }
     if(!token && req.cookies && req.cookies.jwttoken) {
         token = req.cookies.jwttoken;

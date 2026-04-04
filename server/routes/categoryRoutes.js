@@ -10,15 +10,16 @@ const {
   jwtAuthMiddleware,
   analystOnly,
   adminOnly,
+  viewerOnly,
 } = require("../middlewares/jwtAuthMiddleware");
 
 const router = express.Router();
 
 router.use(jwtAuthMiddleware);
 
-router.get("/", analystOnly, getCategories);
+router.get("/", analystOnly,viewerOnly, getCategories);
 router.post("/", adminOnly, addCategory);
-router.get("/:categoryId", analystOnly, getCategory);
+router.get("/:categoryId", analystOnly, viewerOnly, getCategory);
 router.put("/:categoryId", adminOnly, editCategory);
 router.delete("/:categoryId", adminOnly, removeCategory);
 

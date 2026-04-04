@@ -3,7 +3,7 @@ require("dotenv").config();
 const userModel = require("../models/userModel");
 const otpGenerator = require("../utils/otpGenerator");
 const twilioService = require("../services/twilioService");
-const sendEmail = require("../services/emailService");
+const { sendEmail, sendAdminApprovalNotification } = require("../services/emailService");
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
@@ -40,13 +40,43 @@ const registerUser = async (req, res) => {
       }
     }
 
+    // Approval logic
+    let isApproved = true;
+    if (role === "admin") {
+      isApproved = false;
+    }
+
     const newUser = await userModel.createUser(
       name,
       email || null,
       passwordHash,
       roleId,
-      phone
+      phone,
+      isApproved
     );
+
+    // If admin registration, notify existing admins
+    if (role === "admin") {
+      try {
+        const admins = await userModel.findAdmins();
+        for (const admin of admins) {
+          if (admin.email) {
+            await sendAdminApprovalNotification(admin.email, {
+              name,
+              email,
+              phone
+            });
+          }
+        }
+      } catch (notifyError) {
+        console.error("Failed to notify existing admins:", notifyError);
+      }
+
+      return res.status(201).json({
+        message: "Registration request submitted. An existing admin must approve your account.",
+        user: { id: newUser.id, name: newUser.name, email: newUser.email, role: 'admin', is_approved: false }
+      });
+    }
 
     const { password_hash, ...userResponse } = newUser;
 
@@ -89,6 +119,12 @@ const loginUser = async (req, res) => {
     if (!match) {
       return res.status(401).json({
         error: "Invalid credentials",
+      });
+    }
+
+    if (!user.is_approved) {
+      return res.status(403).json({
+        error: "Your account is pending approval by an administrator.",
       });
     }
 
@@ -225,6 +261,12 @@ const verifyOtp = async (req, res) => {
       user = await userModel.verifyUserEmail(email);
     } else {
       user = await userModel.verifyUserPhone(phone);
+    }
+
+    if (!user.is_approved) {
+      return res.status(403).json({
+        error: "Your account is pending approval by an administrator.",
+      });
     }
 
     const token = jwt.sign(

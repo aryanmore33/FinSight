@@ -16,16 +16,17 @@ const {
   jwtAuthMiddleware,
   analystOnly,
   adminOnly,
+  viewerOnly
 } = require("../middlewares/jwtAuthMiddleware");
 
 const router = express.Router();
 
 router.use(jwtAuthMiddleware);
 
-router.get("/", analystOnly, getAlerts);
-router.get("/:alertId", analystOnly, getAlert);
-router.put("/:alertId/read", analystOnly, markAsRead);
-router.put("/read-all", analystOnly, markAllAsRead);
+router.get("/", analystOnly,viewerOnly, getAlerts);
+router.get("/:alertId", analystOnly, viewerOnly, getAlert);
+router.put("/:alertId/read", analystOnly, viewerOnly, markAsRead);
+router.put("/read-all", analystOnly, viewerOnly, markAllAsRead);
 router.delete("/:alertId", adminOnly, removeAlert);
 router.delete("/", adminOnly, removeAllAlerts);
 

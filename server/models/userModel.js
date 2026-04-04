@@ -19,9 +19,9 @@ const createUser = async (name, email, passwordHash, roleId, phone) => {
   try {
     const query = `
       INSERT INTO users 
-      (name, email, password_hash, role_id, phone) 
-      VALUES ($1, $2, $3, $4, $5) 
-      RETURNING id, name, email, role_id, phone, created_at;
+      (name, email, password_hash, role_id, phone, is_approved) 
+      VALUES ($1, $2, $3, $4, $5, $6) 
+      RETURNING id, name, email, role_id, phone, is_approved, created_at;
     `;
 
     const result = await pool.query(query, [
@@ -30,6 +30,7 @@ const createUser = async (name, email, passwordHash, roleId, phone) => {
       passwordHash,
       roleId,
       phone,
+      arguments[5] === undefined ? true : arguments[5]
     ]);
 
     return result.rows[0];
@@ -155,6 +156,7 @@ const findUserById = async (id) => {
       u.name,
       u.email,
       u.phone,
+      u.is_approved,
       u.created_at,
       r.name as role
     FROM users u
@@ -229,6 +231,30 @@ const findUserByPhone = async (phone) => {
 
 
 
+// ================= FIND ALL ADMINS =================
+const findAdmins = async () => {
+  const query = `
+    SELECT u.id, u.name, u.email
+    FROM users u
+    JOIN roles r ON u.role_id = r.id
+    WHERE r.name = 'admin' AND u.is_approved = true
+  `;
+  const result = await pool.query(query);
+  return result.rows;
+};
+
+// ================= APPROVE USER =================
+const approveUser = async (id) => {
+  const query = `
+    UPDATE users
+    SET is_approved = true
+    WHERE id = $1
+    RETURNING id, is_approved;
+  `;
+  const result = await pool.query(query, [id]);
+  return result.rows[0];
+};
+
 module.exports = {
   createUser,
   findRoleByName,
@@ -242,4 +268,6 @@ module.exports = {
   findUserByEmail,
   findUserByPhone,
   updateUserProfile,
+  findAdmins,
+  approveUser,
 };

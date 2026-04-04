@@ -27,7 +27,7 @@ router.use(jwtAuthMiddleware);
  * Analyst: Summary + transactions + insights + alerts
  * Admin: All data including user management
  */
-router.get("/", getDashboardData);
+router.get("/",viewerOnly, getDashboardData);
 
 /**
  * GET /dashboard/quick-stats
@@ -35,7 +35,7 @@ router.get("/", getDashboardData);
  * Returns: Monthly income/expense, unread alerts count, budgets needing attention
  * Role: All (Viewer, Analyst, Admin)
  */
-router.get("/quick-stats", getQuickStats);
+router.get("/quick-stats",viewerOnly, getQuickStats);
 
 /**
  * GET /dashboard/category-breakdown

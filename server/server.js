@@ -17,6 +17,8 @@ const transactionRoutes = require('./routes/transactionRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const budgetRoutes = require('./routes/budgetRoutes');
 const alertRoutes = require('./routes/alertRoutes');
+const chartRoutes = require('./routes/chartRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 
 // Error Handler
@@ -69,6 +71,8 @@ app.use('/api/transactions', transactionRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/budgets', budgetRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/charts', chartRoutes);
+app.use('/api/admin', adminRoutes);
 
 
 
