@@ -1,21 +1,34 @@
 const pool = require("../config/pool");
 
 
+// ================= FIND ROLE BY NAME =================
+const findRoleByName = async (roleName) => {
+  const query = `
+    SELECT id, name
+    FROM roles
+    WHERE name = $1
+  `;
+
+  const result = await pool.query(query, [roleName]);
+  return result.rows[0];
+};
+
+
 // ================= CREATE USER =================
-const createUser = async (name, email, passwordHash, role, phone) => {
+const createUser = async (name, email, passwordHash, roleId, phone) => {
   try {
     const query = `
       INSERT INTO users 
-      (name, email, password_hash, role, phone) 
+      (name, email, password_hash, role_id, phone) 
       VALUES ($1, $2, $3, $4, $5) 
-      RETURNING id, name, email, role, phone, created_at;
+      RETURNING id, name, email, role_id, phone, created_at;
     `;
 
     const result = await pool.query(query, [
       name,
       email,
       passwordHash,
-      role,
+      roleId,
       phone,
     ]);
 
@@ -102,11 +115,14 @@ const verifyUserPhone = async (phone) => {
       is_phone_verified = TRUE,
       last_login_at = now()
     WHERE phone = $1
-    RETURNING id, name, email, role, phone, is_phone_verified;
+    RETURNING id, name, email, role_id, phone, is_phone_verified;
   `;
 
   const result = await pool.query(query, [phone]);
-  return result.rows[0];
+
+  if (!result.rows[0]) return null;
+
+  return findUserById(result.rows[0].id);
 };
 
 
@@ -119,7 +135,75 @@ const verifyUserEmail = async (email) => {
       is_email_verified = TRUE,
       last_login_at = now()
     WHERE email = $1
-    RETURNING id, name, email, role, phone, is_email_verified;
+    RETURNING id;
+  `;
+
+  const result = await pool.query(query, [email]);
+
+  if (!result.rows[0]) return null;
+
+  return findUserById(result.rows[0].id);
+};
+
+
+
+// ================= FIND USER BY ID =================
+const findUserById = async (id) => {
+  const query = `
+    SELECT 
+      u.id,
+      u.name,
+      u.email,
+      u.phone,
+      u.created_at,
+      r.name as role
+    FROM users u
+    LEFT JOIN roles r ON u.role_id = r.id
+    WHERE u.id = $1
+  `;
+
+  const result = await pool.query(query, [id]);
+  return result.rows[0];
+};
+
+
+
+// ================= UPDATE PROFILE =================
+const updateUserProfile = async (id, { name, email, phone }) => {
+  try {
+    const query = `
+      UPDATE users
+      SET name = $1, email = $2, phone = $3
+      WHERE id = $4
+      RETURNING id, name, email, phone;
+    `;
+
+    const result = await pool.query(query, [
+      name,
+      email,
+      phone,
+      id
+    ]);
+
+    return findUserById(result.rows[0].id);
+
+  } catch (err) {
+    console.error("Error updating user profile:", err);
+    throw err;
+  }
+};
+
+
+
+// ================= FIND USER BY EMAIL =================
+const findUserByEmail = async (email) => {
+  const query = `
+    SELECT 
+      u.*,
+      r.name as role
+    FROM users u
+    LEFT JOIN roles r ON u.role_id = r.id
+    WHERE u.email = $1
   `;
 
   const result = await pool.query(query, [email]);
@@ -128,43 +212,17 @@ const verifyUserEmail = async (email) => {
 
 
 
-// ================= FIND USER BY ID =================
-const findUserById = async (id) => {
-  const query = `SELECT * FROM users WHERE id = $1`;
-  const result = await pool.query(query, [id]);
-  return result.rows[0];
-};
-
-const updateUserProfile = async (id, name, email, phone) => {
-  try {
-    const query = `
-      UPDATE users
-      SET name = $1, email = $2, phone = $3
-      WHERE id = $4
-      RETURNING id, name, email, role, phone;
-      `;
-      const result = await pool.query(query, [name, email, phone, id]);
-      return result.rows[0];
-  }
-  catch (err) {
-    console.error("Error updating user profile:", err);
-    throw err;
-  }
-
-
-}
-// ================= FIND USER BY EMAIL =================
-const findUserByEmail = async (email) => {
-  const query = `SELECT * FROM users WHERE email = $1`;
-  const result = await pool.query(query, [email]);
-  return result.rows[0];
-};
-
-
-
 // ================= FIND USER BY PHONE =================
 const findUserByPhone = async (phone) => {
-  const query = `SELECT * FROM users WHERE phone = $1`;
+  const query = `
+    SELECT 
+      u.*,
+      r.name as role
+    FROM users u
+    LEFT JOIN roles r ON u.role_id = r.id
+    WHERE u.phone = $1
+  `;
+
   const result = await pool.query(query, [phone]);
   return result.rows[0];
 };
@@ -173,6 +231,7 @@ const findUserByPhone = async (phone) => {
 
 module.exports = {
   createUser,
+  findRoleByName,
   storeOtp,
   findOtpByEmail,
   findOtpByPhone,

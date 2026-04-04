@@ -13,9 +13,9 @@ const bcrypt = require("bcryptjs");
 const registerUser = async (req, res) => {
   const { name, email, password, phone, role } = req.body;
 
-  if (!name || !password || !phone || !role) {
+  if (!name || !password || !phone) {
     return res.status(400).json({
-      error: "name, phone, password and role required",
+      error: "name, phone, password required",
     });
   }
 
@@ -30,11 +30,21 @@ const registerUser = async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
+    // get role_id from roles table
+    let roleId = 1; // default viewer
+
+    if (role) {
+      const roleRecord = await userModel.findRoleByName(role);
+      if (roleRecord) {
+        roleId = roleRecord.id;
+      }
+    }
+
     const newUser = await userModel.createUser(
       name,
       email || null,
       passwordHash,
-      role,
+      roleId,
       phone
     );
 
@@ -44,8 +54,9 @@ const registerUser = async (req, res) => {
       message: "User registered",
       user: userResponse,
     });
+
   } catch (error) {
-    console.error(error);
+    console.error("Error registering user:", error);
     res.status(500).json({
       error: "Registration failed",
     });
@@ -85,7 +96,7 @@ const loginUser = async (req, res) => {
       {
         userId: user.id,
         phone: user.phone,
-        role: user.role,
+        role: user.role, // comes from JOIN roles table
       },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
@@ -102,6 +113,7 @@ const loginUser = async (req, res) => {
       token,
       user,
     });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -114,12 +126,11 @@ const loginUser = async (req, res) => {
 
 // ================= SEND OTP =================
 const sendOtp = async (req, res) => {
-  const { phone, phoneSuffix, email, purpose } = req.body;
+  const { phone, email, purpose } = req.body;
 
   try {
     const otp = otpGenerator();
     const hashedOtp = await bcrypt.hash(otp.toString(), 10);
-
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     // EMAIL OTP
@@ -140,23 +151,21 @@ const sendOtp = async (req, res) => {
     }
 
     // PHONE OTP
-    if (!phone || !phoneSuffix) {
+    if (!phone) {
       return res.status(400).json({
         error: "phone required",
       });
     }
 
-    const fullPhone = `${phoneSuffix}${phone}`;
-
     await userModel.storeOtp({
       email: null,
-      phone: fullPhone,
+      phone,
       otp: hashedOtp,
       purpose: purpose || "login",
       expiresAt,
     });
 
-    await twilioService.sendOtpPhoneNo(fullPhone, otp);
+    await twilioService.sendOtpPhoneNo(phone, otp);
 
     return res.status(200).json({
       message: "OTP sent to phone",
@@ -174,7 +183,7 @@ const sendOtp = async (req, res) => {
 
 // ================= VERIFY OTP =================
 const verifyOtp = async (req, res) => {
-  const { phone, phoneSuffix, email, otp } = req.body;
+  const { phone, email, otp } = req.body;
 
   try {
     let record;
@@ -182,8 +191,7 @@ const verifyOtp = async (req, res) => {
     if (email) {
       record = await userModel.findOtpByEmail(email);
     } else {
-      const fullPhone = `${phoneSuffix}${phone}`;
-      record = await userModel.findOtpByPhone(fullPhone);
+      record = await userModel.findOtpByPhone(phone);
     }
 
     if (!record) {
@@ -209,7 +217,6 @@ const verifyOtp = async (req, res) => {
       });
     }
 
-    // mark used
     await userModel.markOtpUsed(record.id);
 
     let user;
@@ -217,7 +224,7 @@ const verifyOtp = async (req, res) => {
     if (email) {
       user = await userModel.verifyUserEmail(email);
     } else {
-      user = await userModel.verifyUserPhone(record.phone);
+      user = await userModel.verifyUserPhone(phone);
     }
 
     const token = jwt.sign(
@@ -268,23 +275,30 @@ const checkAuthenticated = async (req, res) => {
   }
 };
 
+
+
+// ================= UPDATE PROFILE =================
 const updateProfile = async (req, res) => {
   const { name, email, phone } = req.body;
 
   try {
-    const updatedUser = await userModel.updateUserProfile(req.user.userId, {
-      name,
-      email,
-      phone,
+    const updatedUser = await userModel.updateUserProfile(
+      req.user.userId,
+      { name, email, phone }
+    );
+
+    res.status(200).json({
+      message: "Profile updated",
+      user: updatedUser,
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      error: "Profile update failed",
     });
   }
-    catch (error) {
-      console.error(error);
-      return res.status(500).json({
-        error: "Profile update failed",
-      });
-    }
-}
+};
 
 
 

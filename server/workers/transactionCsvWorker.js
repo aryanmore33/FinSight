@@ -6,26 +6,45 @@ parentPort.on("message", (filePath) => {
   const transactions = [];
 
   fs.createReadStream(filePath)
-    .pipe(csv())
+    .pipe(
+      csv({
+        separator: ',',
+        skipEmptyLines: true,
+        mapHeaders: ({ header }) =>
+          header.replace(/^\uFEFF/, "").trim().toLowerCase(),
+      })
+    )
     .on("data", (row) => {
+      console.log("Parsed row:", row);
+
+      const category = row.category?.trim();
+      const amount = parseFloat(row.amount);
+      const type = row.type?.trim().toLowerCase();
+      const transaction_date = row.transaction_date;
+      const notes = row.notes || null;
+
+      // Skip empty rows
+      if (!category && !amount && !type) return;
+
       transactions.push({
-        category_id: row.category_id || null,
-        amount: parseFloat(row.amount),
-        type: row.type?.toLowerCase(),
-        transaction_date: row.transaction_date,
-        notes: row.notes || null
+        category,
+        amount,
+        type,
+        transaction_date,
+        notes,
       });
     })
     .on("end", () => {
       parentPort.postMessage({
         success: true,
-        transactions
+        transactions,
       });
     })
     .on("error", (err) => {
+      console.error("CSV parse error:", err);
       parentPort.postMessage({
         success: false,
-        error: err.message
+        error: err.message,
       });
     });
 });

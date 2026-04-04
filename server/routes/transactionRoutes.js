@@ -45,6 +45,8 @@ router.post(
 
 router.post("/bulk/create", adminOnly, bulkCreateTransactionsJson);
 
+// analytics routes
+
 router.get("/analytics/statistics", analystOnly, getStatistics);
 
 router.get("/analytics/categories", analystOnly, getCategoryStats);

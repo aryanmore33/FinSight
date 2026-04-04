@@ -14,12 +14,11 @@ const {
 } = require("../models/transactionModel");
 const { bulkUploadTransactions } = require("../services/transactionService");
 const fs = require("fs");
-const path = require("path");
 
 // ================= CREATE SINGLE TRANSACTION =================
 const addTransaction = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { categoryId, amount, type, transactionDate, notes } = req.body;
 
     // Validation
@@ -67,7 +66,7 @@ const addTransaction = async (req, res, next) => {
 const getTransaction = async (req, res, next) => {
   try {
     const { transactionId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     if (!transactionId) {
       return res.status(400).json({
@@ -105,7 +104,7 @@ const getTransaction = async (req, res, next) => {
 // ================= GET ALL TRANSACTIONS WITH FILTERS & PAGINATION =================
 const getAllTransactions = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const {
       type,
       categoryId,
@@ -160,7 +159,7 @@ const getAllTransactions = async (req, res, next) => {
 const editTransaction = async (req, res, next) => {
   try {
     const { transactionId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user.userId;rId;
     const { categoryId, amount, type, transactionDate, notes } = req.body;
 
     if (!transactionId) {
@@ -242,7 +241,7 @@ const removeTransaction = async (req, res, next) => {
 // ================= BULK UPLOAD TRANSACTIONS FROM CSV =================
 const uploadTransactionsCSV = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     if (!req.file) {
       return res.status(400).json({
@@ -291,10 +290,11 @@ const uploadTransactionsCSV = async (req, res, next) => {
   }
 };
 
+
 // ================= GET TRANSACTION STATISTICS =================
 const getStatistics = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { startDate, endDate } = req.query;
 
     if (!startDate || !endDate) {
@@ -318,7 +318,7 @@ const getStatistics = async (req, res, next) => {
 // ================= GET CATEGORY BREAKDOWN =================
 const getCategoryStats = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { startDate, endDate } = req.query;
 
     if (!startDate || !endDate) {
@@ -342,7 +342,7 @@ const getCategoryStats = async (req, res, next) => {
 // ================= GET MONTHLY TRANSACTIONS =================
 const getMonthlyStats = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { year, month } = req.query;
 
     if (!year || !month) {
@@ -384,7 +384,7 @@ const getMonthlyStats = async (req, res, next) => {
 // ================= GET TOP CATEGORIES BY SPENDING =================
 const getTopSpendingCategories = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { startDate, endDate, limit = 5 } = req.query;
 
     if (!startDate || !endDate) {
@@ -420,7 +420,7 @@ const getTopSpendingCategories = async (req, res, next) => {
 // ================= GET RECENT TRANSACTIONS =================
 const getRecentActivity = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { limit = 10 } = req.query;
 
     if (limit > 50) {
@@ -444,7 +444,7 @@ const getRecentActivity = async (req, res, next) => {
 // ================= BULK CREATE TRANSACTIONS (Direct JSON) =================
 const bulkCreateTransactionsJson = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { transactions } = req.body;
 
     // Validation

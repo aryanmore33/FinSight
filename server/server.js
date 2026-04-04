@@ -14,6 +14,7 @@ const { jwtAuthMiddleware } = require('./middlewares/jwtAuthMiddleware');
 const authRoutes = require('./routes/authRoutes');
 const dashboardRoute = require('./routes/dashboardRoute');
 const transactionRoutes = require('./routes/transactionRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
 
 
 // Error Handler
@@ -63,6 +64,7 @@ app.use(morgan('dev'));
 app.use('/api/auth', authRoutes);
 app.use('/api', dashboardRoute);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/categories', categoryRoutes);
 
 
 

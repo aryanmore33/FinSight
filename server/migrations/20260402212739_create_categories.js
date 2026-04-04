@@ -5,6 +5,12 @@ exports.up = function (knex) {
       .primary()
       .defaultTo(knex.raw('gen_random_uuid()'));
 
+    table.uuid('user_id')
+      .notNullable()
+      .references('id')
+      .inTable('users')
+      .onDelete('CASCADE');
+
     table.string('name').notNullable();
 
     table.enu('type', [
@@ -12,9 +18,14 @@ exports.up = function (knex) {
       'expense'
     ]).notNullable();
 
+    table.string('color');
+    table.string('icon');
+
+    table.boolean('is_deleted').defaultTo(false);
+
     table.timestamps(true, true);
 
-    table.unique(['name','type']);
+    table.unique(['user_id', 'name', 'type']);
   });
 };
 
